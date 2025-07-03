@@ -145,42 +145,59 @@
   function drawBall() {
     ctx.font = "24px Arial";
     ctx.fillStyle = "white";
-    ctx.fillText("🏐", ballX - 12, ballY + 8);
+    ctx.fillText("🏓", ballX - 12, ballY + 8);
   }
 
   function draw() {
-    if (isGameOver) return;
+  if (isGameOver) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    drawPaddle();
-    drawBall();
+  drawPaddle();
+  drawBall();
 
-    ballX += dx;
-    ballY += dy;
+  ballX += dx;
+  ballY += dy;
 
-    if (ballX + dx > canvas.width || ballX + dx < 0) dx = -dx;
-    if (ballY + dy < 0) dy = -dy;
+  // Bounce off walls
+  if (ballX + dx > canvas.width || ballX + dx < 0) dx = -dx;
+  if (ballY + dy < 0) dy = -dy;
 
-    const paddleTop = canvas.height - paddleHeight - 20;
-    if (ballY + dy > paddleTop) {
-      if (ballX > paddleX && ballX < paddleX + paddleWidth) {
-        dy = -dy;
-        score += 1;
-        scoreDisplay.textContent = "Score: " + score;
-        hitSound.currentTime = 0;
-        hitSound.play();
-      } else if (ballY + dy > canvas.height) {
-        isGameOver = true;
-        isGameStarted = false;
-        gameOverSound.play();
-        gameOverScreen.style.display = "flex";
-        return;
-      }
+  const paddleTop = canvas.height - paddleHeight - 20;
+  if (ballY + dy > paddleTop) {
+    if (ballX > paddleX && ballX < paddleX + paddleWidth) {
+      dy = -dy;
+
+      // Increase speed slightly based on score
+      const speedIncrement = 0.3;
+      const maxSpeed = 20;
+
+      // Normalize dx and dy to maintain direction
+      const directionX = dx > 0 ? 1 : -1;
+      const directionY = dy > 0 ? 1 : -1;
+
+      dx = Math.min(Math.abs(dx) + speedIncrement, maxSpeed) * directionX;
+      dy = Math.min(Math.abs(dy) + speedIncrement, maxSpeed) * directionY;
+
+      score += 1;
+      scoreDisplay.textContent = "Score: " + score;
+
+      hitSound.currentTime = 0;
+      hitSound.play();
+    } else if (ballY + dy > canvas.height) {
+      isGameOver = true;
+      isGameStarted = false;
+      gameOverSound.play();
+      gameOverScreen.style.display = "flex";
+      return;
     }
-
-    requestAnimationFrame(draw);
   }
+
+  requestAnimationFrame(draw);
+}
+
+
+   
 </script>
 </body>
 </html>
