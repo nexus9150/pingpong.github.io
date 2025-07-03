@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Emoji Ping Pong</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: black;
+      touch-action: none;
+      font-family: Arial, sans-serif;
+    }
+
+    canvas {
+      display: block;
+      background: black;
+    }
+
+    #gameOverScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      display: none;
+    }
+
+    #retryButton {
+      background-color: white;
+      color: black;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    #retryButton:hover {
+      background-color: #ddd;
+    }
+
+    #scoreDisplay {
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      font-size: 20px;
+      color: white;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="scoreDisplay">Score: 0</div>
+
+<div id="gameOverScreen">
+  <h1>Game Over!</h1>
+  <button id="retryButton">Retry</button>
+</div>
+
+<script>
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  const gameOverScreen = document.getElementById("gameOverScreen");
+  const retryButton = document.getElementById("retryButton");
+  const scoreDisplay = document.getElementById("scoreDisplay");
+
+  // Sound effects
+  const hitSound = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQgAAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==");
+  const gameOverSound = new Audio("data:audio/wav;base64,UklGRlgAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YYAAAACAgICAgICAgICAgICAgICAgICAf39/f39/f4CAgICAgICAgICAgIA==");
+
+  let paddleWidth, paddleHeight, paddleX;
+  let ballX, ballY, ballRadius, dx, dy;
+  let isGameOver = false;
+  let score = 0;
+
+  function setupGame() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Paddle
+    paddleWidth = canvas.width / 4;
+    paddleHeight = 10;
+    paddleX = (canvas.width - paddleWidth) / 2;
+
+    // Ball
+    ballX = canvas.width / 2;
+    ballY = canvas.height / 2;
+    ballRadius = 10;
+    dx = 5;
+    dy = -5;
+
+    isGameOver = false;
+    score = 0;
+    scoreDisplay.textContent = "Score: 0";
+    gameOverScreen.style.display = "none";
+
+    draw();
+  }
+
+  function movePaddle(x) {
+    paddleX = x - paddleWidth / 2;
+    if (paddleX < 0) paddleX = 0;
+    if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
+  }
+
+  document.addEventListener("mousemove", e => {
+    movePaddle(e.clientX);
+  });
+
+  document.addEventListener("touchmove", e => {
+    const touch = e.touches[0];
+    movePaddle(touch.clientX);
+  }, { passive: false });
+
+  retryButton.addEventListener("click", setupGame);
+
+  function drawPaddle() {
+    ctx.beginPath();
+    ctx.rect(paddleX, canvas.height - paddleHeight - 20, paddleWidth, paddleHeight);
+    ctx.fillStyle = "white";
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  function drawBall() {
+    ctx.font = "24px Arial";
+    ctx.fillStyle = "white";
+    ctx.fillText("🏐", ballX - 12, ballY + 8);
+  }
+
+  function draw() {
+    if (isGameOver) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawPaddle();
+    drawBall();
+
+    ballX += dx;
+    ballY += dy;
+
+    // Bounce off walls
+    if (ballX + dx > canvas.width || ballX + dx < 0) dx = -dx;
+    if (ballY + dy < 0) dy = -dy;
+
+    // Paddle logic
+    const paddleTop = canvas.height - paddleHeight - 20;
+    if (ballY + dy > paddleTop) {
+      if (ballX > paddleX && ballX < paddleX + paddleWidth) {
+        dy = -dy;
+        score += 1;
+        scoreDisplay.textContent = "Score: " + score;
+        hitSound.currentTime = 0;
+        hitSound.play();
+      } else if (ballY + dy > canvas.height) {
+        isGameOver = true;
+        gameOverSound.play();
+        gameOverScreen.style.display = "flex";
+        return;
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  setupGame();
+</script>
+</body>
+</html>
